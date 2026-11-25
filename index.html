@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en" class="theme-dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      (function () {
+        var EXT_PROTOCOL_RE = /(?:chrome|moz|safari)-extension:\/\//i;
+        function isExtensionError(source, err) {
+          var stack = err && typeof err.stack === 'string' ? err.stack : '';
+          return (
+            (typeof source === 'string' && EXT_PROTOCOL_RE.test(source)) ||
+            EXT_PROTOCOL_RE.test(stack)
+          );
+        }
+
+        window.addEventListener(
+          'error',
+          function (event) {
+            if (isExtensionError(event.filename, event.error)) {
+              event.preventDefault();
+              event.stopImmediatePropagation();
+            }
+          },
+          true
+        );
+
+        window.addEventListener(
+          'unhandledrejection',
+          function (event) {
+            var reason = event.reason;
+            if (isExtensionError('', reason)) {
+              event.preventDefault();
+              event.stopImmediatePropagation();
+            }
+          },
+          true
+        );
+
+        try {
+          var ownDesc = Object.getOwnPropertyDescriptor(window, 'fetch');
+          var proto = typeof Window !== 'undefined' ? Window.prototype : Object.getPrototypeOf(window);
+          var protoDesc = proto ? Object.getOwnPropertyDescriptor(proto, 'fetch') : undefined;
+          var activeDesc = ownDesc || protoDesc;
+
+          if (
+            typeof window.fetch === 'function' &&
+            activeDesc &&
+            activeDesc.get &&
+            !activeDesc.set &&
+            (!ownDesc || ownDesc.configurable)
+          ) {
+            var nativeFetch = window.fetch.bind(window);
+            Object.defineProperty(window, 'fetch', {
+              configurable: true,
+              enumerable: true,
+              get: function () {
+                return nativeFetch;
+              },
+              set: function () {
+                // Prevent TypeError when injected browser extensions attempt `window.fetch = ...`
+              },
+            });
+          }
+        } catch (_) {
+          // Ignore if the runtime locks window.fetch as non-configurable
+        }
+      })();
+    </script>
+    <title>Afolabi Daniel DCreative — Creative Designer · Prompt Engineer · Motion Graphics</title>
+    <meta
+      name="description"
+      content="Interactive WebGL portfolio of Afolabi Daniel DCreative — Creative Designer, Prompt Engineer, and Motion Graphics Designer crafting brand identities, AI workflows, and 2D animation."
+    />
+    <meta name="author" content="Afolabi Daniel DCreative" />
+    <meta name="theme-color" content="#0a0a0a" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Afolabi Daniel DCreative — Creative Designer · Prompt Engineer · Motion Graphics" />
+    <meta
+      property="og:description"
+      content="Visuals that move people, and move on screen. Brand systems, generative AI workflows, and 2D motion graphics."
+    />
+    <meta property="og:image" content="/assets/portrait.jpg" />
+
+    <!-- Twitter / X -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Afolabi Daniel DCreative — Creative Designer · Prompt Engineer · Motion Graphics" />
+    <meta
+      name="twitter:description"
+      content="Visuals that move people, and move on screen. Brand systems, generative AI workflows, and 2D motion graphics."
+    />
+
+    <!-- Display & Editorial Sans (Bricolage Grotesque) + Mono Counter Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="antialiased" style="background-color: var(--page-bg); color: var(--page-fg);">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
